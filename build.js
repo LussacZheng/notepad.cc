@@ -1,6 +1,3 @@
-const path = require('path')
-const swPrecache = require('sw-precache')
-const rootDir = 'public'
 const rollup = require('rollup')
 const nodeResolve = require('rollup-plugin-node-resolve')
 const buble = require('rollup-plugin-buble')
@@ -9,12 +6,12 @@ const uglify = require('rollup-plugin-uglify')
 
 const isProd = process.env.NODE_ENV === 'production'
 
-module.exports = function(cb) {
-
-  rollup.rollup({
+module.exports = function() {
+  return rollup
+    .rollup({
       entry: 'client/index.js',
       plugins: [
-        nodeResolve({ jsnext: true, main: true }),
+        nodeResolve({ main: true, browser: true }),
         commonjs(),
         buble(),
         isProd && uglify()
@@ -23,14 +20,8 @@ module.exports = function(cb) {
     .then(function(bundle) {
       return bundle.write({
         format: 'iife',
+        moduleName: 'app',
         dest: 'public/script/bundle.js'
       })
-    })
-    .then(function() {
-      swPrecache.write(path.join(rootDir, 'service-worker.js'), {
-        staticFileGlobs: [rootDir + '/**/*.{js,html,css,png,jpg,gif,svg,eot,ttf,woff}'],
-        stripPrefix: rootDir,
-        handleFetch: process.env.NODE_ENV === 'production'
-      }, cb)
     })
 }
